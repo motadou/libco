@@ -576,23 +576,33 @@ extern int co_poll_inner( stCoEpoll_t *ctx,struct pollfd fds[], nfds_t nfds, int
 
 int poll(struct pollfd fds[], nfds_t nfds, int timeout)
 {
+    printf("%s %s %d AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n", __FILE__, __FUNCTION__, __LINE__);
+
 	HOOK_SYS_FUNC( poll );
 
-	if (!co_is_enable_sys_hook() || timeout == 0) {
+	if (!co_is_enable_sys_hook() || timeout == 0) 
+    {
 		return g_sys_poll_func(fds, nfds, timeout);
 	}
+
 	pollfd *fds_merge = NULL;
 	nfds_t nfds_merge = 0;
 	std::map<int, int> m;  // fd --> idx
 	std::map<int, int>::iterator it;
-	if (nfds > 1) {
+	
+    if (nfds > 1) 
+    {
 		fds_merge = (pollfd *)malloc(sizeof(pollfd) * nfds);
-		for (size_t i = 0; i < nfds; i++) {
-			if ((it = m.find(fds[i].fd)) == m.end()) {
+		for (size_t i = 0; i < nfds; i++) 
+        {
+			if ((it = m.find(fds[i].fd)) == m.end()) 
+            {
 				fds_merge[nfds_merge] = fds[i];
 				m[fds[i].fd] = nfds_merge;
 				nfds_merge++;
-			} else {
+			} 
+            else 
+            {
 				int j = it->second;
 				fds_merge[j].events |= fds[i].events;  // merge in j slot
 			}
@@ -600,28 +610,32 @@ int poll(struct pollfd fds[], nfds_t nfds, int timeout)
 	}
 
 	int ret = 0;
-	if (nfds_merge == nfds || nfds == 1) {
+	if (nfds_merge == nfds || nfds == 1) 
+    {
 		ret = co_poll_inner(co_get_epoll_ct(), fds, nfds, timeout, g_sys_poll_func);
-	} else {
-		ret = co_poll_inner(co_get_epoll_ct(), fds_merge, nfds_merge, timeout,
-				g_sys_poll_func);
-		if (ret > 0) {
-			for (size_t i = 0; i < nfds; i++) {
+	}
+    else 
+    {
+		ret = co_poll_inner(co_get_epoll_ct(), fds_merge, nfds_merge, timeout, g_sys_poll_func);
+		if (ret > 0) 
+        {
+			for (size_t i = 0; i < nfds; i++) 
+            {
 				it = m.find(fds[i].fd);
-				if (it != m.end()) {
+				if (it != m.end()) 
+                {
 					int j = it->second;
 					fds[i].revents = fds_merge[j].revents & fds[i].events;
 				}
 			}
 		}
 	}
+
 	free(fds_merge);
 	return ret;
-
-
 }
-int setsockopt(int fd, int level, int option_name,
-			                 const void *option_value, socklen_t option_len)
+
+int setsockopt(int fd, int level, int option_name, const void *option_value, socklen_t option_len)
 {
 	HOOK_SYS_FUNC( setsockopt );
 
@@ -646,12 +660,11 @@ int setsockopt(int fd, int level, int option_name,
 	return g_sys_setsockopt_func( fd,level,option_name,option_value,option_len );
 }
 
-
 int fcntl(int fildes, int cmd, ...)
 {
 	HOOK_SYS_FUNC( fcntl );
 
-	if( fildes < 0 )
+	if (fildes < 0)
 	{
 		return __LINE__;
 	}
@@ -672,9 +685,10 @@ int fcntl(int fildes, int cmd, ...)
 		case F_GETFD:
 		{
 			ret = g_sys_fcntl_func( fildes,cmd );
-      if (lp && !(lp->user_flag & O_NONBLOCK)) {
-          ret = ret & (~O_NONBLOCK);
-      }
+            if (lp && !(lp->user_flag & O_NONBLOCK)) 
+            {
+                ret = ret & (~O_NONBLOCK);
+            }
 			break;
 		}
 		case F_SETFD:
@@ -744,6 +758,7 @@ struct stCoSysEnv_t
 	char *name;	
 	char *value;
 };
+
 struct stCoSysEnvArr_t
 {
 	stCoSysEnv_t *data;
@@ -1000,4 +1015,3 @@ void co_enable_hook_sys() //这函数必须在这里,否则本文件会被忽略！！！
 		co->cEnableSysHook = 1;
 	}
 }
-

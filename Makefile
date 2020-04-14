@@ -24,8 +24,7 @@ v=debug
 include co.mk
 
 ########## options ##########
-CFLAGS += -g -fno-strict-aliasing -O2 -Wall -export-dynamic \
-	-Wall -pipe  -D_GNU_SOURCE -D_REENTRANT -fPIC -Wno-deprecated -m64
+CFLAGS += -g -fno-strict-aliasing -O2 -Wall -export-dynamic -Wall -pipe  -D_GNU_SOURCE -D_REENTRANT -fPIC -Wno-deprecated -m64
 
 UNAME := $(shell uname -s)
 
@@ -45,6 +44,8 @@ all:$(PROGS)
 colib:libcolib.a libcolib.so
 
 libcolib.a: $(COLIB_OBJS)
+	@echo "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	echo $(COBJS)
 	$(ARSTATICLIB) 
 libcolib.so: $(COLIB_OBJS)
 	$(BUILDSHARELIB) 
@@ -81,4 +82,3 @@ libco-$(version).src.tar.gz:
 clean:
 	$(CLEAN) *.o $(PROGS)
 	rm -fr MANIFEST lib solib libco-$(version).src.tar.gz libco-$(version)
-

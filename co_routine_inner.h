@@ -44,12 +44,10 @@ struct stShareStack_t
 	stStackMem_t** stack_array;
 };
 
-
-
 struct stCoRoutine_t
 {
 	stCoRoutineEnv_t *env;
-	pfn_co_routine_t pfn;
+	pfn_co_routine_t  pfn;   // 协程执行函数
 	void *arg;
 	coctx_t ctx;
 
@@ -64,17 +62,13 @@ struct stCoRoutine_t
 	//char sRunStack[ 1024 * 128 ];
 	stStackMem_t* stack_mem;
 
-
 	//save satck buffer while confilct on same stack_buffer;
 	char* stack_sp; 
 	unsigned int save_size;
 	char* save_buffer;
 
 	stCoSpec_t aSpec[1024];
-
 };
-
-
 
 //1.env
 void 				co_init_curr_thread_env();

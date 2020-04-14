@@ -31,6 +31,7 @@ struct stEnv_t
 	stCoCond_t* cond;
 	queue<stTask_t*> task_queue;
 };
+
 void* Producer(void* args)
 {
 	co_enable_hook_sys();
@@ -43,16 +44,23 @@ void* Producer(void* args)
 		env->task_queue.push(task);
 		printf("%s:%d produce task %d\n", __func__, __LINE__, task->id);
 		co_cond_signal(env->cond);
-		poll(NULL, 0, 1000);
+        printf("%s %s %d#######################\n", __FILE__, __FUNCTION__, __LINE__);
+		poll(NULL, 0, 1000*10);
+        printf("%s %s %d>>>>>>>>>>>>>>>>>>>>>>>\n", __FILE__, __FUNCTION__, __LINE__);
 	}
 	return NULL;
 }
+
 void* Consumer(void* args)
 {
+    printf("%s %s %dPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\n", __FILE__, __FUNCTION__, __LINE__);
+
 	co_enable_hook_sys();
 	stEnv_t* env = (stEnv_t*)args;
 	while (true)
 	{
+        printf("%s %s %d+++++++++++++++++++++++++++++\n", __FILE__, __FUNCTION__, __LINE__);
+
 		if (env->task_queue.empty())
 		{
 			co_cond_timedwait(env->cond, -1);
@@ -65,6 +73,7 @@ void* Consumer(void* args)
 	}
 	return NULL;
 }
+
 int main()
 {
 	stEnv_t* env = new stEnv_t;
@@ -72,12 +81,13 @@ int main()
 
 	stCoRoutine_t* consumer_routine;
 	co_create(&consumer_routine, NULL, Consumer, env);
-	co_resume(consumer_routine);
+	co_resume( consumer_routine);
 
 	stCoRoutine_t* producer_routine;
 	co_create(&producer_routine, NULL, Producer, env);
 	co_resume(producer_routine);
-	
+
 	co_eventloop(co_get_epoll_ct(), NULL, NULL);
+
 	return 0;
 }

@@ -34,7 +34,7 @@ struct stCoRoutineAttr_t
 	stShareStack_t*  share_stack;
 	stCoRoutineAttr_t()
 	{
-		stack_size = 128 * 1024;
+		stack_size  = 128 * 1024;
 		share_stack = NULL;
 	}
 }__attribute__ ((packed));

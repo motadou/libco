@@ -16,8 +16,6 @@
 # limitations under the License.
 #
 
-
-
 ##### Makefile Rules ##########
 MAIL_ROOT=.
 SRCROOT=.
@@ -28,7 +26,7 @@ AR = ar -rc
 RANLIB = ranlib
 
 CPPSHARE = $(CPP) -fPIC -shared -O2 -pipe -L$(SRCROOT)/solib/ -o 
-CSHARE = $(CC) -fPIC -shared -O2 -pipe -L$(SRCROOT)/solib/ -o 
+CSHARE   = $(CC)  -fPIC -shared -O2 -pipe -L$(SRCROOT)/solib/ -o 
 
 ifeq ($v,release)
 CFLAGS= -O2 $(INCLS) -fPIC  -DLINUX -pipe -Wno-deprecated -c
@@ -53,9 +51,9 @@ LINKS += -L$(STATICLIBPATH)
 endif
 
 CPPSRCS  = $(wildcard *.cpp)
-CSRCS  = $(wildcard *.c)
+CSRCS    = $(wildcard *.c)
 CPPOBJS  = $(patsubst %.cpp,%.o,$(CPPSRCS))
-COBJS  = $(patsubst %.c,%.o,$(CSRCS))
+COBJS    = $(patsubst %.c,%.o,$(CSRCS))
 
 SRCS = $(CPPSRCS) $(CSRCS)
 OBJS = $(CPPOBJS) $(COBJS)
@@ -67,7 +65,7 @@ BUILDEXE = $(CPP) $(BFLAGS) -o $@ $^ $(LINKS)
 CLEAN = rm -f *.o 
 
 CPPCOMPILE = $(CPPCOMPI) $< $(FLAGS) $(INCLS) $(MTOOL_INCL) -o $@
-CCCOMPILE = $(CCCOMPI) $< $(FLAGS) $(INCLS) $(MTOOL_INCL) -o $@
+CCCOMPILE  = $(CCCOMPI)  $< $(FLAGS) $(INCLS) $(MTOOL_INCL) -o $@
 
 ARSTATICLIB = $(AR) $@.tmp $^ $(AR_FLAGS); \
 			  if [ $$? -ne 0 ]; then exit 1; fi; \

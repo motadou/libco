@@ -26,8 +26,11 @@
 
 int	co_epoll_wait( int epfd,struct co_epoll_res *events,int maxevents,int timeout )
 {
-	return epoll_wait( epfd,events->events,maxevents,timeout );
+    //printf("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+
+	return epoll_wait(epfd, events->events, maxevents, timeout );
 }
+
 int	co_epoll_ctl( int epfd,int op,int fd,struct epoll_event * ev )
 {
 	return epoll_ctl( epfd,op,fd,ev );
@@ -136,6 +139,8 @@ int co_epoll_create( int size )
 }
 int co_epoll_wait( int epfd,struct co_epoll_res *events,int maxevents,int timeout )
 {
+    //printf("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+
 	struct timespec t = { 0 };
 	if( timeout > 0 )
 	{
