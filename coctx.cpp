@@ -39,8 +39,8 @@ available.
 #define R15 9
 #define RDX 10
 #define RCX 11
-#define R8 12
-#define R9 13
+#define R8  12
+#define R9  13
 
 //----- --------
 // 32 bit

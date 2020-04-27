@@ -45,13 +45,13 @@ coctx_swap:
 	ret
 
 #elif defined(__x86_64__)
-	leaq (%rsp),%rax
+	leaq (%rsp),%rax        // 取返回地址
     movq %rax, 104(%rdi)
     movq %rbx, 96(%rdi)
     movq %rcx, 88(%rdi)
     movq %rdx, 80(%rdi)
 	movq 0(%rax), %rax
-	movq %rax, 72(%rdi) 
+	movq %rax, 72(%rdi)     // 保存返回地址程序指针
     movq %rsi, 64(%rdi)
 	movq %rdi, 56(%rdi)
     movq %rbp, 48(%rdi)

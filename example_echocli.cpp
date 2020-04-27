@@ -179,6 +179,8 @@ static void *readwrite_routine( void *arg )
 	return 0;
 }
 
+// ./example_echocli 127.0.0.1 10236 100 1
+
 int main(int argc,char *argv[])
 {
 	stEndPoint endpoint;

@@ -114,40 +114,6 @@ static unsigned long long GetTickMS()
 #endif
 }
 
-/* no longer use
-static pid_t GetPid()
-{
-    static __thread pid_t pid = 0;
-    static __thread pid_t tid = 0;
-    if( !pid || !tid || pid != getpid() )
-    {
-        pid = getpid();
-#if defined( __APPLE__ )
-		tid = syscall( SYS_gettid );
-		if( -1 == (long)tid )
-		{
-			tid = pid;
-		}
-#elif defined( __FreeBSD__ )
-		syscall(SYS_thr_self, &tid);
-		if( tid < 0 )
-		{
-			tid = pid;
-		}
-#else 
-        tid = syscall( __NR_gettid );
-#endif
-
-    }
-    return tid;
-
-}
-static pid_t GetPid()
-{
-	char **p = (char**)pthread_self();
-	return p ? *(pid_t*)(p + 18) : getpid();
-}
-*/
 template <class T,class TLink>
 void RemoveFromLink(T *ap)
 {
@@ -488,7 +454,7 @@ struct stCoRoutine_t *co_create_env( stCoRoutineEnv_t * env, const stCoRoutineAt
 	lp->arg = arg;
 
 	stStackMem_t* stack_mem = NULL;
-	if( at.share_stack )
+	if( at.share_stack )    // 是否使用共享栈
 	{
 		stack_mem     = co_get_stackmem( at.share_stack);
 		at.stack_size = at.share_stack->stack_size;
@@ -498,16 +464,16 @@ struct stCoRoutine_t *co_create_env( stCoRoutineEnv_t * env, const stCoRoutineAt
 		stack_mem = co_alloc_stackmem(at.stack_size);
 	}
 
-	lp->stack_mem = stack_mem;
+	lp->stack_mem   = stack_mem;
 
-	lp->ctx.ss_sp = stack_mem->stack_buffer;
+	lp->ctx.ss_sp   = stack_mem->stack_buffer;
 	lp->ctx.ss_size = at.stack_size;
 
 	lp->cStart = 0;
 	lp->cEnd = 0;
-	lp->cIsMain = 0;
+	lp->cIsMain = 0;    // 是否主协程
 	lp->cEnableSysHook = 0;
-	lp->cIsShareStack  = at.share_stack != NULL;
+	lp->cIsShareStack  = at.share_stack != NULL;    // 是否共享栈
 
 	lp->save_size   = 0;
 	lp->save_buffer = NULL;
@@ -552,21 +518,23 @@ void co_release( stCoRoutine_t *co )
     co_free( co );
 }
 
-void co_swap(stCoRoutine_t* curr, stCoRoutine_t* pending_co);
+void co_swap(stCoRoutine_t* curr, stCoRoutine_t* pending_co, int iFrom = 0);
 
 void co_resume( stCoRoutine_t *co )
 {
 	stCoRoutineEnv_t *env = co->env;
-	stCoRoutine_t *lpCurrRoutine = env->pCallStack[ env->iCallStackSize - 1 ];
-	if( !co->cStart )
+	stCoRoutine_t    *lpCurrRoutine = env->pCallStack[ env->iCallStackSize - 1 ];
+	if (!co->cStart)
 	{
-		coctx_make( &co->ctx,(coctx_pfn_t)CoRoutineFunc,co,0 );
+		coctx_make(&co->ctx, (coctx_pfn_t)CoRoutineFunc, co, 0);
 		co->cStart = 1;
 	}
-	env->pCallStack[ env->iCallStackSize++ ] = co;
-	co_swap( lpCurrRoutine, co );
+	env->pCallStack[env->iCallStackSize++] = co;
 
+    printf("%s %s %d ||sie:%d\n", __FILE__, __FUNCTION__, __LINE__, env->iCallStackSize);
+    co_swap(lpCurrRoutine, co, 111);
 
+    printf("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 
@@ -600,7 +568,7 @@ void co_yield_env( stCoRoutineEnv_t *env )
 
 	env->iCallStackSize--;
 
-	co_swap(curr, last);
+	co_swap(curr, last, 222);
 }
 
 void co_yield_ct()
@@ -625,12 +593,12 @@ void save_stack_buffer(stCoRoutine_t* occupy_co)
 	}
 
 	occupy_co->save_buffer = (char*)malloc(len); //malloc buf;
-	occupy_co->save_size = len;
+	occupy_co->save_size   = len;
 
 	memcpy(occupy_co->save_buffer, occupy_co->stack_sp, len);
 }
 
-void co_swap(stCoRoutine_t* curr, stCoRoutine_t* pending_co)
+void co_swap(stCoRoutine_t* curr, stCoRoutine_t* pending_co, int iFrom)
 {
  	stCoRoutineEnv_t* env = co_get_curr_thread_env();
 
@@ -658,8 +626,12 @@ void co_swap(stCoRoutine_t* curr, stCoRoutine_t* pending_co)
 		}
 	}
 
+    printf("%s %s %d - %d\n", __FILE__, __FUNCTION__, __LINE__, iFrom);
+
 	//swap context
-	coctx_swap(&(curr->ctx),&(pending_co->ctx) );
+	coctx_swap(&(curr->ctx), &(pending_co->ctx));
+
+    printf("%s %s %d - %d\n", __FILE__, __FUNCTION__, __LINE__, iFrom);
 
 	//stack buffer may be overwrite, so get again;
 	stCoRoutineEnv_t* curr_env = co_get_curr_thread_env();
@@ -744,7 +716,7 @@ void co_init_curr_thread_env()
 	stCoRoutineEnv_t *env = gCoEnvPerThread;
 
 	env->iCallStackSize = 0;
-	struct stCoRoutine_t *self = co_create_env( env, NULL, NULL,NULL );
+	struct stCoRoutine_t *self = co_create_env(env, NULL, NULL, NULL);
 	self->cIsMain = 1;
 
 	env->pending_co = NULL;
@@ -1111,6 +1083,7 @@ struct stCoCond_t
 	stCoCondItem_t *head;
 	stCoCondItem_t *tail;
 };
+
 static void OnSignalProcessEvent( stTimeoutItem_t * ap )
 {
 	stCoRoutine_t *co = (stCoRoutine_t*)ap->pArg;
@@ -1169,7 +1142,9 @@ int co_cond_timedwait(stCoCond_t *link, int ms )
 	}
 	AddTail( link, psi);
 
+    printf("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 	co_yield_ct();
+    printf("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	RemoveFromLink<stCoCondItem_t,stCoCond_t>( psi );
 	free(psi);

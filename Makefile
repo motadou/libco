@@ -44,7 +44,6 @@ all:$(PROGS)
 colib:libcolib.a libcolib.so
 
 libcolib.a: $(COLIB_OBJS)
-	@echo "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	echo $(COBJS)
 	$(ARSTATICLIB) 
 libcolib.so: $(COLIB_OBJS)
